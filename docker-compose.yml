@@ -1,0 +1,98 @@
+version: "3.8"
+services:
+  users-dailymotion:
+    build:
+      context: src
+      dockerfile: users/Dockerfile
+    image: dailymotion-users:latest
+    command:
+      - "poetry"
+      - "run"
+      - "uvicorn"
+      - "app.drivers.rest.main:app"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8884"
+      - "--reload"
+    restart: always
+    environment:
+      POSTGRES_USER: pgs_user
+      POSTGRES_PASSWORD: pgs_password
+      POSTGRES_DB: dailymotion_users
+      POSTGRES_HOST: dailymotion_db
+      POSTGRES_PORT: 5432
+      VERSION: 1.0
+      APPLICATION_ENVIRONMENT: local
+      APPLICATION_NAME: "Dailymotion User Service"
+      REDIS_CONNECTION_STRING: "redis://@redis:6379/1"
+    depends_on:
+      dailymotion_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8884:8884"
+    volumes:
+      - ./src/users/app:/app/app
+    networks:
+      - dailymotion-network
+
+  dailymotion_db:
+    container_name: dailymotion_db
+    image: postgres:15
+    environment:
+      POSTGRES_USER: pgs_user
+      POSTGRES_PASSWORD: pgs_password
+      POSTGRES_DB: dailymotion_users
+    ports:
+      - "5432:5432"
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+    volumes:
+      - ./pgdb_data:/var/lib/postgresql/data
+      - ./src/users/init-db.sh:/docker-entrypoint-initdb.d/init.sh
+    networks:
+      - dailymotion-network
+
+  redis:
+    image: redis:8.4.0
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    restart: always
+    networks:
+      - dailymotion-network
+
+  pgadmin:
+    container_name: pgadmin4
+    image: dpage/pgadmin4:9.11.0
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+      - PGADMIN_LISTEN_ADDRESS=0.0.0.0
+      - PGADMIN_LISTEN_PORT=5050
+    ports:
+      - "5050:5050"
+    volumes:
+      - app-pgadmin-data:/var/lib/pgadmin
+    networks:
+      - dailymotion-network
+
+volumes:
+  app-pgadmin-data:
+    driver: local
+
+networks:
+  dailymotion-network:
+    external: false
+    name: dailymotion-network

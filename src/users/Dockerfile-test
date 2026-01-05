@@ -1,0 +1,19 @@
+ARG DOCKER_IMAGE
+FROM $DOCKER_IMAGE
+
+USER root
+
+# pipx will install binaries here
+ENV PATH=$PATH:/root/.local/bin
+
+# installing pipx
+RUN python -m pip install pipx && \
+    pipx ensurepath && \
+    pipx --version
+
+# installing tox
+RUN python -m pipx install tox==4.6.1 && \
+    tox --version
+
+COPY ./users/tox.ini /app
+COPY ./users/tests /app/app/tests

@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  users-tests:
+    build:
+      context: src
+      dockerfile: users/Dockerfile-test
+      args:
+          - DOCKER_IMAGE=dailymotion-users:latest
+    image: dailymotion-users-tests:latest
+    command: ["tox", "-e", "users_unit"]
