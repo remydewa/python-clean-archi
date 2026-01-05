@@ -22,6 +22,7 @@ docker compose up
 Then with your browser You can:
 - Access to the API documentation:
 * http://127.0.0.1:8884/api/v1/docs
+
 There is also hidden endpoints for k8s pods healthcheck:
 * http://127.0.0.1:8884/health/ready
 * http://127.0.0.1:8884/health/live
@@ -35,7 +36,7 @@ docker compose down
 ```
 
 ## Run the tests
-To run the tests, with your terminal, go in the `src` directory and run the following commands:
+To run the tests, with your terminal, go in the `python-clean-archi` directory and run the following commands:
 
 ### Run the unitary tests
 ````
